@@ -1,0 +1,205 @@
+{
+  "name": "My workflow 7",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "91874072-ab6e-4f76-852f-bf0f0dcab940",
+      "name": "Telegram Trigger",
+      "webhookId": "0fa873a2-07f8-4d2f-b3cb-7932b7924d02",
+      "credentials": {
+        "telegramApi": {
+          "id": "WK3CHVAOGUUzzFmy",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtenemos el mensaje que llegó de Telegram\nconst mensaje = $('Telegram Trigger').first().json.message.text;\nconst usuario = $('Telegram Trigger').first().json.message.from.first_name;\n\n// Lógica para separar \"Hamburguesa 25\"\n// 1. Dividimos el texto por espacios\nconst partes = mensaje.split(\" \");\n\n// 2. Sacamos la última parte (el supuesto precio)\nconst posibleMonto = partes.pop(); \n\n// 3. Lo que queda es la descripción\nconst descripcion = partes.join(\" \");\n\n// 4. Devolvemos los datos limpios\nreturn {\n  json: {\n    fecha: new Date().toLocaleDateString('es-PE'), // Fecha de hoy\n    concepto: descripcion || \"Sin concepto\",\n    monto: parseFloat(posibleMonto) || 0, // Convertimos a número\n    usuario: usuario\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "cb524e4b-4adf-4298-b513-bf423a7275ba",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1zBby3lG3Uaa0hJgs4M96vpMvxMBEeIZiai9RktHYiVU/edit?usp=sharing",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1zBby3lG3Uaa0hJgs4M96vpMvxMBEeIZiai9RktHYiVU/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Fecha": "={{ $json.fecha }}",
+            "Concepto": "={{ $json.concepto }}",
+            "Monto": "={{ $json.monto }}",
+            "Usuario": "={{ $json.usuario }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Fecha",
+              "displayName": "Fecha",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Concepto",
+              "displayName": "Concepto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Monto",
+              "displayName": "Monto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Usuario",
+              "displayName": "Usuario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        416,
+        0
+      ],
+      "id": "ce78ca4f-6ea8-478f-97ae-52ca00721666",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleApi": {
+          "id": "XlWXKp4prJvLcl0q",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=✅ Gasto guardado!🥳: {{ $json.Concepto }} - {{ $json.Monto }}so",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        592,
+        0
+      ],
+      "id": "7b69d8e2-20db-4113-9110-4097b08ce4a4",
+      "name": "Send a text message",
+      "webhookId": "60a4225a-adea-4939-9d2c-89871a84739e",
+      "credentials": {
+        "telegramApi": {
+          "id": "WK3CHVAOGUUzzFmy",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": -1
+  },
+  "versionId": "7d1b9d52-c596-467e-b957-27e2ecad5bcc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8eec92362ab4caafc2c99010c4ef56643022f61b13473ee2beb530b72d9a9c9f"
+  },
+  "id": "rvl5Z102Pw5WPYre_ipwS",
+  "tags": [
+    {
+      "name": "V1_FinanceBot",
+      "id": "WQSszRaZHOF2dVUj",
+      "updatedAt": "2026-02-11T02:31:04.068Z",
+      "createdAt": "2026-02-11T02:31:04.068Z"
+    }
+  ]
+}

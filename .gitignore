@@ -1,0 +1,7 @@
+# Ignorar la llave de Google y carpetas de sistema
+*.json
+!workflow_gastos.json
+n8n_data/
+.env
+node_modules/
+.DS_Store
